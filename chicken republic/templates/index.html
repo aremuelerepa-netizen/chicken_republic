@@ -4,22 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Republic Mokola | AI Order</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
     <style>
         .bg-cr-red { background-color: #ED1C24; }
         .text-cr-yellow { color: #FFCD00; }
         .bg-cr-yellow { background-color: #FFCD00; }
+        #success-modal { display: none; } /* Hidden by default */
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
+    <div id="success-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate__animated animate__bounceIn">
+            <div class="bg-cr-red p-8 text-center text-white">
+                <div class="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg text-2xl">🍗</div>
+                <h2 class="font-black text-2xl italic">PAYMENT RECEIVED!</h2>
+                <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Kitchen is preparing your meal</p>
+            </div>
+            <div class="p-8 text-center">
+                <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">Order Reference</p>
+                <p class="text-xl font-black text-slate-800 mb-6">CR-MOK-{{ range(1000, 9999) | random }}</p>
+                <button onclick="closeSuccess()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold uppercase text-xs tracking-widest">Great, thanks!</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="bg-cr-red p-4 text-white shadow-lg flex justify-between items-center">
-        <h1 class="font-bold text-xl tracking-tight">CHICKEN <span class="text-cr-yellow">REPUBLIC</span></h1>
+        <h1 class="font-bold text-xl tracking-tight italic">CHICKEN <span class="text-cr-yellow">REPUBLIC</span></h1>
         <span class="text-xs bg-white text-cr-red px-2 py-1 rounded-full font-bold">MOKOLA BRANCH</span>
     </nav>
 
     <main class="flex-grow flex flex-col md:flex-row p-4 gap-4 max-w-6xl mx-auto w-full">
-        
         <div class="flex-grow bg-white rounded-xl shadow-md flex flex-col h-[70vh]">
             <div id="chat-box" class="flex-grow p-4 overflow-y-auto space-y-4">
                 <div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%]">
@@ -33,29 +53,32 @@
         </div>
 
         <div class="w-full md:w-80 bg-cr-yellow p-6 rounded-xl shadow-md">
-            <h2 class="font-bold text-cr-red text-lg mb-4">YOUR ORDER</h2>
-            <div id="cart" class="text-sm space-y-2 mb-6 text-red-900 italic">
-                Your cart is empty...
+            <h2 class="font-bold text-cr-red text-lg mb-4 uppercase italic">Your Order</h2>
+            <div id="cart" class="text-sm space-y-2 mb-6 text-red-900 italic font-bold">
+                (Items will appear here)
             </div>
-            <button class="w-full bg-cr-red text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+            <button onclick="showSuccess()" class="w-full bg-cr-red text-white py-3 rounded-xl font-black shadow-lg hover:opacity-90 transition uppercase text-sm">
                 CHECKOUT ON PAYSTACK
             </button>
             <div class="mt-8">
-                <p class="text-xs font-bold text-red-800">📍 DELIVERY PIN</p>
-                <button onclick="getLocation()" class="text-xs bg-white text-cr-red p-2 rounded mt-2 font-bold w-full">GET MY CURRENT LOCATION</button>
+                <p class="text-[10px] font-black text-red-800 uppercase tracking-widest">📍 Delivery Pin</p>
+                <p id="loc-text" class="text-[10px] text-red-700 font-bold">Location not locked</p>
+                <button onclick="getLocation()" class="text-[10px] bg-white text-cr-red p-2 rounded mt-2 font-black w-full shadow-sm">GET MY CURRENT LOCATION</button>
             </div>
         </div>
     </main>
 
     <script>
+        // Chat function with memory (Flask handles memory via Session)
         async function sendMsg() {
             const input = document.getElementById('user-input');
             const box = document.getElementById('chat-box');
             if(!input.value) return;
 
             const userText = input.value;
-            box.innerHTML += `<div class="bg-cr-red text-white p-3 rounded-lg ml-auto w-fit max-w-[80%]">${userText}</div>`;
+            box.innerHTML += `<div class="bg-cr-red text-white p-3 rounded-lg ml-auto w-fit max-w-[80%] shadow-md">${userText}</div>`;
             input.value = '';
+            box.scrollTop = box.scrollHeight;
 
             const res = await fetch('/chat', {
                 method: 'POST',
@@ -63,16 +86,26 @@
                 body: JSON.stringify({message: userText})
             });
             const data = await res.json();
-            box.innerHTML += `<div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%]">${data.reply}</div>`;
+            box.innerHTML += `<div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%] text-gray-800 shadow-sm">${data.reply}</div>`;
             box.scrollTop = box.scrollHeight;
         }
 
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    alert("Location Captured! 📍 We will deliver to your exact coordinates.");
+                    document.getElementById('loc-text').innerText = "📍 GPS LOCKED! Ready for delivery.";
+                    document.getElementById('loc-text').style.color = "green";
                 });
             }
+        }
+
+        // SHOW SUCCESS INTERFACE
+        function showSuccess() {
+            document.getElementById('success-modal').style.display = 'flex';
+        }
+
+        function closeSuccess() {
+            document.getElementById('success-modal').style.display = 'none';
         }
     </script>
 </body>
