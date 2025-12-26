@@ -1,95 +1,70 @@
-from flask import Flask, request
-from twilio.twiml.messaging_response import MessagingResponse
+from flask import Flask, render_template, request, jsonify, session
+from flask_session import Session
+import os
 import json
 import requests
-import os
-from dotenv import load_dotenv
-
-# Load .env
-load_dotenv()
 
 app = Flask(__name__)
-BOT_NAME = "Chicken Republic Bot"
 
-# Paystackimport os
-LLAMA_API_KEY = os.environ.get("LLAMA_API_KEY")
-PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY")
-LLAMA_API_URL = os.environ.get("LLAMA_API_URL")
-# Load branch data
-with open("branch_data.json") as f:
-    branch_db = json.load(f)
+# --- Configuration ---
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
-def create_payment_link(amount, email="demo@example.com", item=""):
-    url = "https://paystack.shop/pay/chickenrepublic"
-    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
-    data = {
-        "email": email,
-        "amount": amount * 100,
-        "metadata": {"item": item}
-    }
-    r = requests.post(url, json=data, headers=headers)
-    res = r.json()
-    if res['status']:
-        return res['data']['authorization_url']
-    return None
+LLAMA_API_KEY = os.environ.get("GROQ_API_KEY")
+LLAMA_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-@app.route("/whatsapp", methods=["POST"])
-def whatsapp_reply():
-    incoming_msg = request.form.get("Body").lower()
-    resp = MessagingResponse()
+# --- System Prompt for Personality ---
+SYSTEM_PROMPT = """
+You are the friendly, energetic AI host for Chicken Republic Mokola.
+Personality: Warm, helpful, and use light Nigerian slang (e.g., 'How body?', 'Enjoy your meal o!').
+Rules:
+1. Always be polite and answering any question the user has, even if it's not about chicken.
+2. Use the provided Menu data for specific price questions.
+3. Suggest the 'Refuel Meal' or 'Dodo Cubes' if they are unsure.
+4. Keep responses concise and formatted for a chat bubble.
+"""
 
-    # Optional: detect branch keyword
-    branch_name = "Mokola"
-    for b in branch_db["branches"]:
-        if b.lower() in incoming_msg:
-            branch_name = b
-            break
-    branch = branch_db["branches"][branch_name]
+def get_branch_data():
+    try:
+        with open("branch_data.json", "r") as f:
+            return json.load(f)["branches"]["mokola"]
+    except: return {"name": "Chicken Republic", "menu": []}
 
-    # Show menu
-    if "menu" in incoming_msg:
-        items = [f"{i['item']} - ₦{i['price']}" for i in branch['menu']]
-        reply_text = f"{BOT_NAME}: {branch['name']} Menu:\n" + "\n".join(items)
+@app.route("/")
+def home():
+    return render_template("index.html")
 
-    # Show promotions
-    elif "promotion" in incoming_msg or "offer" in incoming_msg:
-        promos = [f"{p['name']} (valid until {p['valid_until']})" for p in branch['promotions']]
-        reply_text = f"{BOT_NAME}: Current promotions at {branch['name']}:\n" + "\n".join(promos)
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_input = request.json.get("message")
+    branch = get_branch_data()
+    
+    if 'history' not in session:
+        session['history'] = []
 
-    # Place order
-    elif "order" in incoming_msg:
-        item_name = incoming_msg.replace("order", "").strip()
-        item = next((i for i in branch['menu'] if i['item'].lower() == item_name.lower()), None)
-        if item:
-            payment_link = create_payment_link(item['price'], item=item_name)
-            branch['orders'].append({"item": item_name, "paid": False})
-            reply_text = f"{BOT_NAME}: You ordered {item_name} (₦{item['price']}). Pay here to confirm:\n{payment_link}"
-        else:
-            reply_text = f"{BOT_NAME}: Sorry, {item_name} is not on the menu at {branch['name']}."
+    # Build context for AI
+    context = f"Branch Info: {branch['name']} in {branch.get('address', 'Ibadan')}. Menu: {branch['menu']}"
+    
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + "\n" + context}]
+    messages.extend(session['history'][-6:]) # Remember last 3 exchanges
+    messages.append({"role": "user", "content": user_input})
 
-    # General questions handled by LLaMA
-    else:
-        payload = {"prompt": f"You are a helpful assistant for {branch['name']}. Answer: {incoming_msg}"}
-        llama_resp = requests.post(LLAMA_API_URL, headers={"Authorization": f"Bearer {LLAMA_API_KEY}"}, json=payload)
-        data = llama_resp.json()
-        reply_text = data.get("response", f"{BOT_NAME}: Sorry, I couldn't understand that.")
-
-    resp.message(reply_text)
-    return str(resp)
-
-# Payment webhook
-@app.route("/payment_webhook", methods=["POST"])
-def payment_webhook():
-    payload = request.json
-    if payload.get('event') == 'charge.success':
-        item_name = payload['data']['metadata']['item']
-        # Mark order as paid
-        for b in branch_db["branches"]:
-            for order in branch_db["branches"][b]["orders"]:
-                if order['item'].lower() == item_name.lower():
-                    order['paid'] = True
-        print(f"Payment confirmed for {item_name}")
-    return "OK", 200
+    try:
+        r = requests.post(LLAMA_API_URL, 
+            headers={"Authorization": f"Bearer {LLAMA_API_KEY}"},
+            json={"model": "llama-3.1-8b-instant", "messages": messages, "temperature": 0.8},
+            timeout=10
+        )
+        ai_reply = r.json()['choices'][0]['message']['content']
+        
+        session['history'].append({"role": "user", "content": user_input})
+        session['history'].append({"role": "assistant", "content": ai_reply})
+        session.modified = True
+        
+        return jsonify({"reply": ai_reply})
+    except:
+        return jsonify({"reply": "Oya, my network reach small glitch. Try again for me?"})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000)
