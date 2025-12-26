@@ -1,36 +1,137 @@
+/* --- Root Variables --- */
 :root {
     --cr-red: #ED1C24;
     --cr-yellow: #FFCD00;
+    --cr-black: #1A1A1A;
+    --cr-gray: #F4F4F4;
+    --cr-green: #22C55E;
 }
 
-body { font-family: 'Inter', sans-serif; }
-
-.chat-container {
-    height: 500px;
-    overflow-y: auto;
-    scrollbar-width: thin;
+/* --- General Reset --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-.bot-msg {
-    background: #f1f1f1;
-    color: #333;
-    border-radius: 15px 15px 15px 0;
+body {
+    background-color: var(--cr-gray);
+    color: var(--cr-black);
+}
+
+/* --- Scrollbar Styling --- */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+/* --- Chat Bubble Styling --- */
+#chat-box div {
+    margin-bottom: 15px;
+    line-height: 1.5;
+    font-size: 14px;
+    max-width: 85%;
+}
+
+/* AI Message Bubble */
+.bg-gray-200 {
+    background-color: white !important;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 2px !important;
+    color: #374151;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* User Message Bubble */
+.bg-cr-red {
+    background-color: var(--cr-red) !important;
+    border-bottom-right-radius: 2px !important;
+    box-shadow: 0 4px 6px rgba(237, 28, 36, 0.2);
+}
+
+/* --- Paystack Button Inside Chat --- */
+.pay-button-container {
+    background: #f9fafb;
+    border: 1px dashed #22c55e;
     padding: 12px;
-    max-width: 80%;
-    margin-bottom: 10px;
+    border-radius: 12px;
+    margin-top: 10px;
 }
 
-.user-msg {
-    background: var(--cr-red);
+.pay-link-btn {
+    display: block;
+    background-color: var(--cr-green);
     color: white;
-    border-radius: 15px 15px 0 15px;
-    padding: 12px;
-    max-width: 80%;
-    margin-left: auto;
-    margin-bottom: 10px;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 800;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s, background 0.2s;
 }
 
-.order-card {
-    border-left: 5px solid var(--cr-red);
-    background: white;
+.pay-link-btn:hover {
+    background-color: #16a34a;
+    transform: translateY(-2px);
+}
+
+/* --- Sidebar & Evidence Log --- */
+#evidence-log {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.evidence-line {
+    border-left: 3px solid var(--cr-red);
+    background: #fff5f5;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    animation: fadeIn 0.5s ease;
+}
+
+.evidence-line b {
+    color: var(--cr-red);
+}
+
+.evidence-line span {
+    display: block;
+    font-size: 10px;
+    color: #666;
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Layout Adjustments --- */
+main {
+    animation: fadeIn 0.8s ease-out;
+}
+
+input#user-input:focus {
+    box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.1);
+    border-color: var(--cr-red) !important;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* Responsive fixes for small screens */
+@media (max-width: 768px) {
+    #chat-box {
+        height: 60vh;
+    }
 }
