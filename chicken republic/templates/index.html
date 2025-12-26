@@ -11,98 +11,145 @@
         .bg-cr-red { background-color: #ED1C24; }
         .text-cr-yellow { color: #FFCD00; }
         .bg-cr-yellow { background-color: #FFCD00; }
-        #success-modal { display: none; }
-        .evidence-line { border-left: 2px solid #ED1C24; padding-left: 8px; margin-bottom: 8px; font-size: 11px; }
+        .evidence-line { border-left: 4px solid #22c55e; background-color: #f0fdf4; padding: 8px; margin-bottom: 8px; border-radius: 4px; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #ED1C24; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
     <nav class="bg-cr-red p-4 text-white shadow-lg flex justify-between items-center">
         <h1 class="font-bold text-xl tracking-tight italic">CHICKEN <span class="text-cr-yellow">REPUBLIC</span></h1>
-        <span class="text-xs bg-white text-black px-2 py-1 rounded-full font-bold">MOKOLA BRANCH</span>
+        <span class="text-xs bg-white text-black px-2 py-1 rounded-full font-bold uppercase">Mokola Branch</span>
     </nav>
 
     <main class="flex-grow flex flex-col md:flex-row p-4 gap-4 max-w-6xl mx-auto w-full">
-        <div class="flex-grow bg-white rounded-xl shadow-md flex flex-col h-[75vh]">
-            <div id="chat-box" class="flex-grow p-4 overflow-y-auto space-y-4">
-                <div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%] shadow-sm">
-                    👋 Welcome! I'm Ayo. I know all of Ibadan! Tell me what you'd like to eat or let's just gist!
+        <div class="flex-grow bg-white rounded-xl shadow-md flex flex-col h-[75vh] overflow-hidden">
+            <div id="chat-box" class="flex-grow p-4 overflow-y-auto space-y-4 bg-[#f8f9fa]">
+                <div class="bg-white border p-3 rounded-lg w-fit max-w-[80%] shadow-sm text-gray-700">
+                    👋 Welcome! I'm Ahmad. Ready to experience the best food in Ibadan? What are we eating today?
                 </div>
             </div>
-            <div class="p-4 border-t flex gap-2 bg-gray-50">
-                <input id="user-input" type="text" placeholder="Type your message..." class="flex-grow border p-3 rounded-xl outline-none focus:border-cr-red shadow-inner">
-                <button onclick="sendMsg()" class="bg-cr-red text-white px-6 py-2 rounded-xl font-bold hover:scale-105 transition-transform">SEND</button>
+            
+            <div class="p-4 border-t bg-white">
+                <div class="flex gap-2 items-end">
+                    <textarea id="user-input" rows="1" 
+                        placeholder="Type your order... (Enter to send, Shift+Enter for new line)" 
+                        class="flex-grow border p-3 rounded-xl outline-none focus:border-cr-red shadow-inner resize-none transition-all"
+                        oninput="this.style.height = '';this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <button onclick="sendMsg()" class="bg-cr-red text-white p-3 rounded-xl font-bold hover:scale-105 transition-all shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
         <div class="w-full md:w-80 space-y-4">
-            <div class="bg-cr-yellow p-6 rounded-xl shadow-md">
-                <h2 class="font-bold text-cr-red text-lg mb-2 uppercase italic">Active Order</h2>
-                <div id="cart" class="text-sm mb-4 text-red-900 font-bold">No active items</div>
-                <div class="text-[10px] font-black text-red-800 uppercase tracking-widest mb-1">📍 Delivery Status</div>
-                <p id="loc-text" class="text-[10px] text-red-700 font-bold mb-4 italic">Location not locked</p>
-                <button onclick="getLocation()" class="text-[10px] bg-white text-cr-red p-2 rounded font-black w-full shadow-sm mb-2">LOCK MY GPS LOCATION</button>
+            <div class="bg-cr-yellow p-6 rounded-xl shadow-md border-b-4 border-orange-400">
+                <h2 class="font-black text-cr-red text-lg mb-2 uppercase italic tracking-tighter">Active Items</h2>
+                <div id="cart" class="text-sm mb-4 text-red-900 font-bold min-h-[40px] italic">
+                    Your cart is empty...
+                </div>
+                <div class="pt-2 border-t border-red-200">
+                    <p id="loc-text" class="text-[10px] text-red-700 font-bold uppercase tracking-widest">📍 Location: Not Locked</p>
+                    <button onclick="getLocation()" class="text-[9px] bg-white text-cr-red px-2 py-1 rounded mt-2 font-black shadow-sm uppercase">Update GPS</button>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-cr-red h-[30vh] overflow-y-auto">
-                <h2 class="font-bold text-gray-800 text-sm mb-4 uppercase">Payment Evidence Log</h2>
-                <div id="evidence-log" class="space-y-2">
-                    <p class="text-gray-400 text-[10px] italic">No confirmed payments yet...</p>
+            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-cr-red flex flex-col h-[40vh]">
+                <h2 class="font-bold text-gray-800 text-xs mb-4 uppercase tracking-widest">Payment Evidence Log</h2>
+                <div id="evidence-log" class="space-y-3 overflow-y-auto flex-grow pr-2">
+                    <p class="text-gray-400 text-[10px] italic">No transaction history yet.</p>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
+        // HANDLE ENTER KEY LOGIC
+        document.getElementById('user-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMsg();
+            }
+        });
+
         async function sendMsg() {
             const input = document.getElementById('user-input');
             const box = document.getElementById('chat-box');
-            if(!input.value) return;
+            const cart = document.getElementById('cart');
+            const log = document.getElementById('evidence-log');
 
-            const userText = input.value;
-            box.innerHTML += `<div class="bg-cr-red text-white p-3 rounded-lg ml-auto w-fit max-w-[80%] shadow-md animate__animated animate__fadeInRight">${userText}</div>`;
-            input.value = '';
-            box.scrollTop = box.scrollHeight;
+            if(!input.value.trim()) return;
 
-            const res = await fetch('/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: userText})
-            });
-            const data = await res.json();
+            const userText = input.value.trim();
             
-            // Check if the bot sent a payment link
-            let botReply = data.reply;
-            if(data.payment_link) {
-                botReply += `<br><br><a href="${data.payment_link}" target="_blank" class="block bg-green-600 text-white text-center p-3 rounded-xl font-bold mt-2 animate__animated animate__pulse animate__infinite">💳 PAY NOW VIA PAYSTACK</a>`;
-            }
-
-            box.innerHTML += `<div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%] text-gray-800 shadow-sm animate__animated animate__fadeInLeft">${botReply}</div>`;
+            // Add user bubble
+            box.innerHTML += `
+                <div class="bg-cr-red text-white p-3 rounded-xl ml-auto w-fit max-w-[80%] shadow-md animate__animated animate__fadeInRight">
+                    ${userText.replace(/\n/g, '<br>')}
+                </div>`;
+            
+            input.value = '';
+            input.style.height = 'auto'; // Reset height
             box.scrollTop = box.scrollHeight;
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: userText})
+                });
+                const data = await res.json();
+                
+                // Update "Active Items" Sidebar
+                if (userText.toLowerCase().includes('amala') || userText.toLowerCase().includes('jollof') || userText.toLowerCase().includes('rice')) {
+                    cart.innerHTML = `<div class="animate__animated animate__flash">🔥 ${userText}</div>`;
+                }
+
+                let botReply = data.reply;
+                
+                // Direct Payment Button - No copying required
+                if(data.payment_link) {
+                    botReply += `
+                        <div class="mt-4 p-3 bg-white border-2 border-green-500 rounded-xl text-center shadow-lg">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 underline">Invoice Generated</p>
+                            <a href="${data.payment_link}" target="_blank" 
+                               class="block bg-green-600 text-white py-3 rounded-lg font-black text-sm hover:bg-green-700 transition-colors uppercase tracking-widest">
+                               💳 Pay for Order Now
+                            </a>
+                        </div>`;
+                    
+                    // Add to Evidence Log automatically
+                    if(log.innerHTML.includes("No transaction history")) log.innerHTML = "";
+                    log.innerHTML = `
+                        <div class="evidence-line animate__animated animate__fadeInDown">
+                            <span class="text-green-700 font-black">PENDING PAY</span><br>
+                            <span class="text-[10px]">Ref: ${data.order_id}</span>
+                        </div>` + log.innerHTML;
+                }
+
+                box.innerHTML += `
+                    <div class="bg-white border p-3 rounded-xl w-fit max-w-[80%] text-gray-800 shadow-sm animate__animated animate__fadeInLeft">
+                        ${botReply}
+                    </div>`;
+                box.scrollTop = box.scrollHeight;
+
+            } catch (err) {
+                box.innerHTML += `<div class="text-red-500 text-xs text-center">Connection error. Please check your internet.</div>`;
+            }
         }
 
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    document.getElementById('loc-text').innerText = "📍 GPS LOCKED! Coordinates stored.";
-                    document.getElementById('loc-text').className = "text-[10px] text-green-700 font-bold mb-4";
+                    document.getElementById('loc-text').innerHTML = "📍 GPS: Location Secured";
+                    document.getElementById('loc-text').className = "text-[10px] text-green-600 font-bold uppercase tracking-widest";
                 });
             }
-        }
-
-        // Function to add evidence to the sidebar after a successful payment
-        function addEvidence(orderId, amount) {
-            const log = document.getElementById('evidence-log');
-            if(log.innerHTML.includes("No confirmed payments")) log.innerHTML = "";
-            
-            const time = new Date().toLocaleTimeString();
-            log.innerHTML = `
-                <div class="evidence-line animate__animated animate__fadeIn">
-                    <span class="text-green-600 font-bold">✔ CONFIRMED</span><br>
-                    ID: ${orderId} | ₦${amount}<br>
-                    <span class="text-gray-400 font-light">${time}</span>
-                </div>
-            ` + log.innerHTML;
         }
     </script>
 </body>
