@@ -12,19 +12,23 @@ app.config.update(
 )
 Session(app)
 
-# Credentials
+# --- API Configuration ---
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 PAYSTACK_SECRET = os.environ.get("PAYSTACK_SECRET_KEY")
-BASE_URL = "https://your-app-name.onrender.com" # Change this after deployment
 
-# --- Background: The Keep-Alive Heartbeat ---
+# This is YOUR website URL (Required for Paystack to redirect to your success page)
+MY_SITE_URL = "https://chicken-republic-r4bk.onrender.com" 
+
+# This is the GROQ API URL
+GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+# --- Feature 1: The Heartbeat (Keep Render Awake) ---
 def heartbeat():
     while True:
         try:
-            requests.get(BASE_URL, timeout=5)
-            print("💓 System Status: Mokola Branch is Awake & Active.")
-        except Exception as e:
-            print(f"💔 Heartbeat skipped: {e}")
+            requests.get(MY_SITE_URL, timeout=5)
+        except:
+            pass
         time.sleep(600)
 
 threading.Thread(target=heartbeat, daemon=True).start()
@@ -33,26 +37,19 @@ threading.Thread(target=heartbeat, daemon=True).start()
 def load_mokola_assets():
     try:
         with open("branch_data.json", "r") as f:
-            data = json.load(f)
-            return data["branches"]["mokola"]
-    except Exception:
+            return json.load(f)["branches"]["mokola"]
+    except:
         return {"menu": "Refuel Meal: 2500, Citizens Meal: 3800, Dodo Cubes: 800"}
 
-# --- AI Sales Personality ---
+# --- AI Personality (Snappy & Human) ---
 SYSTEM_PROMPT = """
-You are 'Ayo', the Lead Digital Host at Chicken Republic Mokola, Ibadan. 
-Your goal: Turn inquiries into orders.
-
-TONE: Professional but 'Naija-friendly'. Use phrases like 'Welcome to the Republic!', 'Enjoy your meal o!', 'How body?'.
-
-SALES STRATEGY:
-1. If they ask for chicken, suggest a 'Refuel Meal'. 
-2. ALWAYS recommend 'Dodo Cubes' or 'Coleslaw' as a side.
-3. If they mention delivery, tell them to 'Lock GPS' on the dashboard.
-4. Keep answers short. Format prices clearly in Naira (₦).
+You are 'Ayo', the friendly host at Chicken Republic Mokola. 
+RULES:
+1. Short replies ONLY (Max 2 sentences).
+2. Use slang like 'How body?', 'Oya', 'Abeg'.
+3. Don't be a robot. Chat about anything, but keep it light and foodie.
+4. If food is mentioned, suggest Refuel Meal + Dodo Cubes.
 """
-
-# --- ROUTES ---
 
 @app.route("/")
 def home():
@@ -67,49 +64,47 @@ def chat():
     if 'history' not in session:
         session['history'] = []
 
-    # Build High-Context Prompt
-    context = f"CURRENT MENU & PRICES: {branch_info['menu']}. LOCATION: Mokola Roundabout, Ibadan."
+    context = f"MENU: {branch_info['menu']}. Location: Mokola, Ibadan."
+    
     messages = [
         {"role": "system", "content": f"{SYSTEM_PROMPT}\n{context}"},
-        *session['history'][-6:], # Last 3 full exchanges
+        *session['history'][-4:], 
         {"role": "user", "content": user_msg}
     ]
 
     try:
         response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
+            GROQ_BASE_URL,
             headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
-            json={"model": "llama-3.1-8b-instant", "messages": messages, "temperature": 0.6},
+            json={
+                "model": "llama-3.1-8b-instant", 
+                "messages": messages, 
+                "temperature": 0.7,
+                "max_tokens": 80 
+            },
             timeout=10
         )
         ai_reply = response.json()['choices'][0]['message']['content']
         
-        # Update Memory
         session['history'].append({"role": "user", "content": user_msg})
         session['history'].append({"role": "assistant", "content": ai_reply})
         session.modified = True
         
         return jsonify({"reply": ai_reply})
-    except Exception as e:
-        return jsonify({"reply": "My network reach small glitch, abeg try again!"}), 500
+    except:
+        return jsonify({"reply": "Network glitch, abeg try again! 🍗"})
 
 @app.route("/initialize_payment", methods=["POST"])
 def initialize_payment():
     order_data = request.json
     order_ref = f"CR-MOK-{random.randint(10000, 99999)}"
     
-    # Paystack payload optimized for staff tracking
     payload = {
-        "email": "orders@chicken-republic.com", # Corporate routing email
+        "email": "customer@cr-mokola.com",
         "amount": int(order_data['amount']) * 100,
         "reference": order_ref,
-        "callback_url": f"{BASE_URL}/success",
-        "metadata": {
-            "custom_fields": [
-                {"display_name": "Delivery Point", "variable_name": "location", "value": order_data.get("location")},
-                {"display_name": "Items", "variable_name": "cart", "value": order_data.get("cart")}
-            ]
-        }
+        "callback_url": f"{MY_SITE_URL}/success", # Returns customer to your site
+        "metadata": {"location": order_data.get("location"), "cart": order_data.get("cart")}
     }
     
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET}"}
@@ -121,7 +116,7 @@ def initialize_payment():
 
 @app.route("/success")
 def success():
-    ref = request.args.get('reference')
+    ref = request.args.get('reference', 'CRM-ORDER')
     return render_template("success.html", order_id=ref)
 
 if __name__ == "__main__":
