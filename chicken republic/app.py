@@ -97,6 +97,7 @@ def initialize_payment():
         "email": "customer@mokola-express.com",
         "amount": int(data['amount']) * 100, # Paystack uses Kobo
         "reference": order_id,
+        "callback_url": "https://your-app-name.onrender.com/success",
         "metadata": {
             "location": data.get("location"),
             "cart": data.get("cart")
@@ -113,3 +114,4 @@ def initialize_payment():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
+
