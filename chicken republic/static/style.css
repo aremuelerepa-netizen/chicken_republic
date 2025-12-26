@@ -1,0 +1,36 @@
+:root {
+    --cr-red: #ED1C24;
+    --cr-yellow: #FFCD00;
+}
+
+body { font-family: 'Inter', sans-serif; }
+
+.chat-container {
+    height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.bot-msg {
+    background: #f1f1f1;
+    color: #333;
+    border-radius: 15px 15px 15px 0;
+    padding: 12px;
+    max-width: 80%;
+    margin-bottom: 10px;
+}
+
+.user-msg {
+    background: var(--cr-red);
+    color: white;
+    border-radius: 15px 15px 0 15px;
+    padding: 12px;
+    max-width: 80%;
+    margin-left: auto;
+    margin-bottom: 10px;
+}
+
+.order-card {
+    border-left: 5px solid var(--cr-red);
+    background: white;
+}

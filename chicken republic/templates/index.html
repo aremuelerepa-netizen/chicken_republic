@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken Republic Mokola | AI Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-cr-red { background-color: #ED1C24; }
+        .text-cr-yellow { color: #FFCD00; }
+        .bg-cr-yellow { background-color: #FFCD00; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <nav class="bg-cr-red p-4 text-white shadow-lg flex justify-between items-center">
+        <h1 class="font-bold text-xl tracking-tight">CHICKEN <span class="text-cr-yellow">REPUBLIC</span></h1>
+        <span class="text-xs bg-white text-cr-red px-2 py-1 rounded-full font-bold">MOKOLA BRANCH</span>
+    </nav>
+
+    <main class="flex-grow flex flex-col md:flex-row p-4 gap-4 max-w-6xl mx-auto w-full">
+        
+        <div class="flex-grow bg-white rounded-xl shadow-md flex flex-col h-[70vh]">
+            <div id="chat-box" class="flex-grow p-4 overflow-y-auto space-y-4">
+                <div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%]">
+                    👋 Welcome! How body? What can I get for you today?
+                </div>
+            </div>
+            <div class="p-4 border-t flex gap-2">
+                <input id="user-input" type="text" placeholder="I want a Refuel Meal..." class="flex-grow border p-2 rounded-lg outline-none focus:border-cr-red">
+                <button onclick="sendMsg()" class="bg-cr-red text-white px-6 py-2 rounded-lg font-bold">SEND</button>
+            </div>
+        </div>
+
+        <div class="w-full md:w-80 bg-cr-yellow p-6 rounded-xl shadow-md">
+            <h2 class="font-bold text-cr-red text-lg mb-4">YOUR ORDER</h2>
+            <div id="cart" class="text-sm space-y-2 mb-6 text-red-900 italic">
+                Your cart is empty...
+            </div>
+            <button class="w-full bg-cr-red text-white py-3 rounded-xl font-bold hover:opacity-90 transition">
+                CHECKOUT ON PAYSTACK
+            </button>
+            <div class="mt-8">
+                <p class="text-xs font-bold text-red-800">📍 DELIVERY PIN</p>
+                <button onclick="getLocation()" class="text-xs bg-white text-cr-red p-2 rounded mt-2 font-bold w-full">GET MY CURRENT LOCATION</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function sendMsg() {
+            const input = document.getElementById('user-input');
+            const box = document.getElementById('chat-box');
+            if(!input.value) return;
+
+            const userText = input.value;
+            box.innerHTML += `<div class="bg-cr-red text-white p-3 rounded-lg ml-auto w-fit max-w-[80%]">${userText}</div>`;
+            input.value = '';
+
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: userText})
+            });
+            const data = await res.json();
+            box.innerHTML += `<div class="bg-gray-200 p-3 rounded-lg w-fit max-w-[80%]">${data.reply}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    alert("Location Captured! 📍 We will deliver to your exact coordinates.");
+                });
+            }
+        }
+    </script>
+</body>
+</html>
