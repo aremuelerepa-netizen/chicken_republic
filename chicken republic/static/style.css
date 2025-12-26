@@ -1,137 +1,137 @@
-/* --- Root Variables --- */
+/* --- Root Colors --- */
 :root {
     --cr-red: #ED1C24;
     --cr-yellow: #FFCD00;
-    --cr-black: #1A1A1A;
-    --cr-gray: #F4F4F4;
+    --cr-dark-red: #C4161B;
+    --cr-bg: #F8F9FA;
     --cr-green: #22C55E;
 }
 
-/* --- General Reset --- */
+/* --- General Reset & Typography --- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 body {
-    background-color: var(--cr-gray);
-    color: var(--cr-black);
+    background-color: var(--cr-bg);
+    color: #1A1A1A;
+    overflow-x: hidden;
 }
 
-/* --- Scrollbar Styling --- */
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 10px;
+/* --- Navigation & Header --- */
+nav {
+    z-index: 50;
+    position: sticky;
+    top: 0;
 }
 
-/* --- Chat Bubble Styling --- */
-#chat-box div {
-    margin-bottom: 15px;
-    line-height: 1.5;
-    font-size: 14px;
-    max-width: 85%;
+/* --- Chat Container Styling --- */
+#chat-box {
+    scroll-behavior: smooth;
+    background-image: radial-gradient(#e5e7eb 0.5px, transparent 0.5px);
+    background-size: 20px 20px; /* Subtle dot pattern */
 }
 
-/* AI Message Bubble */
-.bg-gray-200 {
-    background-color: white !important;
-    border: 1px solid #e5e7eb;
-    border-bottom-left-radius: 2px !important;
-    color: #374151;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* User Message Bubble */
+/* --- Message Bubbles --- */
 .bg-cr-red {
     background-color: var(--cr-red) !important;
-    border-bottom-right-radius: 2px !important;
-    box-shadow: 0 4px 6px rgba(237, 28, 36, 0.2);
+    border-radius: 18px 18px 4px 18px !important;
+    font-size: 0.95rem;
 }
 
-/* --- Paystack Button Inside Chat --- */
-.pay-button-container {
-    background: #f9fafb;
-    border: 1px dashed #22c55e;
-    padding: 12px;
-    border-radius: 12px;
-    margin-top: 10px;
+/* AI Message Bubble (White) */
+#chat-box > div:not(.bg-cr-red) {
+    background-color: white !important;
+    border: 1px solid #E5E7EB;
+    border-radius: 18px 18px 18px 4px !important;
+    color: #374151;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
-.pay-link-btn {
-    display: block;
-    background-color: var(--cr-green);
-    color: white;
-    text-align: center;
+/* --- IMPROVISED: Textarea Styling --- */
+textarea#user-input {
+    max-height: 150px;
+    min-height: 50px;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+}
+
+textarea#user-input:focus {
+    border-color: var(--cr-red);
+    box-shadow: 0 0 0 4px rgba(237, 28, 36, 0.1);
+}
+
+/* --- Sidebar: Active Items & Cart --- */
+#cart {
+    background: rgba(255, 255, 255, 0.3);
     padding: 10px;
-    border-radius: 8px;
-    font-weight: 800;
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: transform 0.2s, background 0.2s;
+    border-radius: 10px;
+    border: 1px dashed rgba(237, 28, 36, 0.2);
 }
 
-.pay-link-btn:hover {
-    background-color: #16a34a;
-    transform: translateY(-2px);
-}
-
-/* --- Sidebar & Evidence Log --- */
+/* --- Evidence Log Styling --- */
 #evidence-log {
-    max-height: 250px;
-    overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 .evidence-line {
-    border-left: 3px solid var(--cr-red);
-    background: #fff5f5;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    animation: fadeIn 0.5s ease;
+    border-left: 4px solid var(--cr-green);
+    background-color: #f0fdf4;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
-.evidence-line b {
-    color: var(--cr-red);
+.evidence-line span.text-green-700 {
+    font-weight: 800;
+    letter-spacing: 0.5px;
 }
 
-.evidence-line span {
-    display: block;
-    font-size: 10px;
-    color: #666;
+/* --- Payment Button Pulse --- */
+.animate__pulse {
+    animation-duration: 2s;
 }
 
-/* --- Animations --- */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+    width: 6px;
 }
 
-/* --- Layout Adjustments --- */
-main {
-    animation: fadeIn 0.8s ease-out;
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-input#user-input:focus {
-    box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.1);
-    border-color: var(--cr-red) !important;
+::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 10px;
 }
 
-button:active {
-    transform: scale(0.95);
+::-webkit-scrollbar-thumb:hover {
+    background: var(--cr-red);
 }
 
-/* Responsive fixes for small screens */
+/* --- Hover Effects --- */
+button:hover {
+    filter: brightness(1.1);
+}
+
+a.bg-green-600:hover {
+    background-color: #16a34a !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* --- Mobile Fixes --- */
 @media (max-width: 768px) {
-    #chat-box {
-        height: 60vh;
+    .h-\[75vh\] {
+        height: 65vh;
+    }
+    .p-4 {
+        padding: 0.75rem;
     }
 }
