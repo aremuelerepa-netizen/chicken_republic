@@ -17,15 +17,13 @@ PAYSTACK_SECRET = os.environ.get("PAYSTACK_SECRET_KEY")
 MY_SITE_URL = "https://chicken-republic-r4bk.onrender.com" 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-# --- Fine-Tuned Rules ---
 SYSTEM_PROMPT = """
 You are Ahmad, the host at Chicken Republic Mokola. 
 STRICT RULES:
-1. MAX LENGTH: 2 short sentences only. No essays.
-2. LANGUAGE: Clear, professional English. No broken English.
-3. ORDERING: If they mention food, say "Great choice!" and ask "Would you like anything else to go with that, or are you ready for your payment link?"
+1. MAX LENGTH: 2 short sentences only.
+2. LANGUAGE: Clear, professional English.
+3. ORDERING: If they mention food, say "Great choice!" and ask if they want anything else or if they are ready to pay.
 4. PAYMENT TRIGGER: Do NOT suggest the payment link until the user says they are ready, done, or finished.
-5. KNOWLEDGE: You know all Ibadan areas. Be friendly and witty.
 """
 
 @app.route("/")
@@ -40,7 +38,7 @@ def chat():
     if 'history' not in session:
         session['history'] = []
 
-    # --- NEW Logic: Only trigger link when user is READY ---
+    # Logic: Only trigger link when user is READY
     ready_keywords = ["ready", "checkout", "that is all", "done", "finished", "pay now", "no more"]
     payment_link = None
     order_id = f"CRM-{random.randint(10000, 99999)}"
@@ -61,7 +59,6 @@ def chat():
         except:
             pass
 
-    # AI API Call
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         *session['history'][-4:], 
@@ -76,7 +73,7 @@ def chat():
                 "model": "llama-3.1-8b-instant", 
                 "messages": messages, 
                 "temperature": 0.7,
-                "max_tokens": 80 # STOPS LONG REPLIES
+                "max_tokens": 80 
             },
             timeout=10
         )
@@ -86,10 +83,12 @@ def chat():
         session['history'].append({"role": "assistant", "content": ai_reply})
         session.modified = True
         
+        # Return AI reply PLUS the payment link and order details for the sidebar
         return jsonify({
             "reply": ai_reply,
             "payment_link": payment_link,
-            "order_id": order_id
+            "order_id": order_id,
+            "user_order_summary": user_msg # This updates the "Active Items"
         })
     except:
         return jsonify({"reply": "Network glitch, try again!"})
