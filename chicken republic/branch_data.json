@@ -11,6 +11,7 @@
         {"item": "Fries", "price": 800},
         {"item": "Drinks", "price": 500},
         {"item": "Wraps", "price": 1200}
+        {"item": "Amala with Stew", "price": 1000}
       ],
       "promotions": [
         {"name": "Buy 1 Get 1 Fries", "valid_until": "2025-12-31"},
@@ -18,27 +19,5 @@
       ],
       "orders": []
     }
-  }
-}
-{
-  "branches": {
-    "Mokola": {
-      "name": "Chicken Republic Mokola",
-      "address": "Uncle Bus Stop, Mokola Rd, Ibadan",
-      "phone": "+2349087772401",
-      "hours": "7:00 AM – 10:00 PM",
-      "website": "http://www.chicken-republic.com",
-      "menu": [
-        {"item": "Chicken Combo", "price": 2500},
-        {"item": "Fries", "price": 800},
-        {"item": "Drinks", "price": 500},
-        {"item": "Wraps", "price": 1200}
-      ],
-      "promotions": [
-        {"name": "Buy 1 Get 1 Fries", "valid_until": "2025-12-31"},
-        {"name": "Free Drink with Chicken Combo", "valid_until": "2025-12-31"}
-      ],
-      "orders": []
-    }
-  }
-}
+  
+
